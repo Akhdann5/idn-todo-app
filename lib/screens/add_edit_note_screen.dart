@@ -29,6 +29,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     'Belanja',
     'Kesehatan'
   ];
+
   final Map<String, Color> _colors = {
     '#2196F3': Colors.blue,
     '#4CAF50': Colors.green,
@@ -50,43 +51,24 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     _previousText = _descriptionController.text;
   }
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
   Future<void> _pickImage() async {
     try {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
       if (pickedFile != null) {
-        setState(() {
-          _imagePath = pickedFile.path;
-        });
-        print('🖼️ Image selected: $_imagePath');
+        setState(() => _imagePath = pickedFile.path);
       }
     } catch (e) {
-      print('❌ Error picking image: $e');
       _showError('Gagal memilih gambar');
     }
   }
 
-  void _removeImage() {
-    setState(() {
-      _imagePath = null;
-    });
-    print('🖼️ Image removed');
-  }
+  void _removeImage() => setState(() => _imagePath = null);
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -99,114 +81,55 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
         'color': _selectedColor,
         'imagePath': _imagePath,
       };
-
-      print('💾 Saving note data:');
-      print('  Title: ${result['title']}');
-      print('  Description: ${result['description']}');
-      print('  Label: ${result['label']}');
-      print('  Color: ${result['color']}');
-      print('  Image: ${result['imagePath']}');
-
       Navigator.of(context).pop(result);
     }
   }
 
-  // Formatting methods
   void _addChecklistItem(bool checked) {
-    final cursorPosition = _descriptionController.selection.baseOffset;
-    final currentText = _descriptionController.text;
-
-    final newText = TextFormatter.addChecklistItem(currentText, cursorPosition,
+    final cursor = _descriptionController.selection.baseOffset;
+    final newText = TextFormatter.addChecklistItem(
+        _descriptionController.text, cursor,
         checked: checked);
-
     _descriptionController.text = newText;
-
-    // Set cursor position after the new checklist item
-    final newCursorPosition = TextFormatter.getNewCursorPosition(
-        currentText, newText, cursorPosition);
-    _descriptionController.selection =
-        TextSelection.fromPosition(TextPosition(offset: newCursorPosition));
   }
 
   void _addNumberedItem() {
-    final cursorPosition = _descriptionController.selection.baseOffset;
-    final currentText = _descriptionController.text;
-
-    final newText = TextFormatter.addNumberedItem(currentText, cursorPosition);
-
+    final cursor = _descriptionController.selection.baseOffset;
+    final newText =
+        TextFormatter.addNumberedItem(_descriptionController.text, cursor);
     _descriptionController.text = newText;
-
-    // Set cursor position after the new numbered item
-    final newCursorPosition = TextFormatter.getNewCursorPosition(
-        currentText, newText, cursorPosition);
-    _descriptionController.selection =
-        TextSelection.fromPosition(TextPosition(offset: newCursorPosition));
   }
 
   void _toggleChecklistItem() {
-    final cursorPosition = _descriptionController.selection.baseOffset;
-    final currentText = _descriptionController.text;
-
-    final newText =
-        TextFormatter.toggleChecklistAtCursor(currentText, cursorPosition);
-
+    final cursor = _descriptionController.selection.baseOffset;
+    final newText = TextFormatter.toggleChecklistAtCursor(
+        _descriptionController.text, cursor);
     _descriptionController.text = newText;
-
-    // Maintain cursor position
-    _descriptionController.selection =
-        TextSelection.fromPosition(TextPosition(offset: cursorPosition));
   }
 
-  Widget _buildFormatButton({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onPressed,
-  }) {
+  void _handleTextChange(String newValue) {
+    _previousText = newValue;
+  }
+
+  Widget _buildFormatButton(
+      {required IconData icon,
+      required String tooltip,
+      required VoidCallback onPressed}) {
     return Tooltip(
       message: tooltip,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(4),
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: Colors.grey.shade600,
-          ),
+          child: Icon(icon, color: Colors.white70, size: 20),
         ),
       ),
     );
-  }
-
-  void _handleTextChange(String newValue) {
-    // Check jika ada enter yang baru ditambahkan
-    if (newValue.length > _previousText.length &&
-        newValue.contains('\n') &&
-        newValue.endsWith('\n')) {
-      final cursorPosition = _descriptionController.selection.baseOffset;
-
-      // Handle auto-continuation untuk numbered list dan checklist
-      final result = TextFormatter.handleEnterPress(newValue, cursorPosition);
-
-      if (result['shouldUpdate'] == true) {
-        final newText = result['newText'] as String;
-        final newCursorPos = result['newCursorPosition'] as int;
-
-        _descriptionController.text = newText;
-        _descriptionController.selection =
-            TextSelection.fromPosition(TextPosition(offset: newCursorPos));
-
-        _previousText = newText;
-        return;
-      }
-    }
-
-    _previousText = newValue;
   }
 
   @override
@@ -214,134 +137,132 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     final isEditing = widget.note != null;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0D0D0D),
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit Catatan' : 'Tambah Catatan'),
+        backgroundColor: const Color(0xFF0D0D0D),
+        title: Text(
+          isEditing ? 'Edit Catatan' : 'Tambah Catatan',
+          style: const TextStyle(
+              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: const Icon(Icons.save, color: Colors.white),
             onPressed: _saveNote,
-            tooltip: 'Simpan',
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(18.0),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              // Title Field
+              // Judul
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
                   labelText: 'Judul *',
-                  border: OutlineInputBorder(),
-                  hintText: 'Masukkan judul catatan',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Judul tidak boleh kosong';
-                  }
-                  return null;
-                },
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Judul tidak boleh kosong' : null,
               ),
               const SizedBox(height: 16),
 
-              // Description Field with Formatting Toolbar
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Toolbar
+              Row(
                 children: [
-                  // Formatting Toolbar
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Format: ',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildFormatButton(
-                          icon: Icons.check_box_outline_blank,
-                          tooltip: 'Tambah Checklist',
-                          onPressed: () => _addChecklistItem(false),
-                        ),
-                        const SizedBox(width: 4),
-                        _buildFormatButton(
-                          icon: Icons.check_box,
-                          tooltip: 'Tambah Checklist Tercentang',
-                          onPressed: () => _addChecklistItem(true),
-                        ),
-                        const SizedBox(width: 4),
-                        _buildFormatButton(
-                          icon: Icons.format_list_numbered,
-                          tooltip: 'Tambah Numbered List',
-                          onPressed: _addNumberedItem,
-                        ),
-                        const SizedBox(width: 4),
-                        _buildFormatButton(
-                          icon: Icons.toggle_on,
-                          tooltip: 'Toggle Checklist',
-                          onPressed: _toggleChecklistItem,
-                        ),
-                      ],
-                    ),
+                  _buildFormatButton(
+                    icon: Icons.check_box_outline_blank,
+                    tooltip: 'Checklist Kosong',
+                    onPressed: () => _addChecklistItem(false),
                   ),
-                  // Description TextFormField
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Deskripsi *',
-                      border: OutlineInputBorder(),
-                      hintText:
-                          'Masukkan deskripsi catatan\n\nContoh penggunaan:\n☐ Item checklist\n☑️ Item selesai\n1. Item bernomor\n2. Item kedua\n\nTekan Enter pada item numbered/checklist untuk melanjutkan otomatis!',
-                      alignLabelWithHint: true,
-                    ),
-                    maxLines: 8,
-                    onChanged: _handleTextChange,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Deskripsi tidak boleh kosong';
-                      }
-                      return null;
-                    },
+                  const SizedBox(width: 8),
+                  _buildFormatButton(
+                    icon: Icons.check_box,
+                    tooltip: 'Checklist Tercentang',
+                    onPressed: () => _addChecklistItem(true),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildFormatButton(
+                    icon: Icons.format_list_numbered,
+                    tooltip: 'Nomor',
+                    onPressed: _addNumberedItem,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildFormatButton(
+                    icon: Icons.toggle_on,
+                    tooltip: 'Toggle Checklist',
+                    onPressed: _toggleChecklistItem,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // Label Selection
-              DropdownButtonFormField<String>(
-                value: _selectedLabel,
-                decoration: const InputDecoration(
-                  labelText: 'Label',
-                  border: OutlineInputBorder(),
+              // Deskripsi
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: 8,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Deskripsi *',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-                items: _labels.map((String label) {
-                  return DropdownMenuItem<String>(
-                    value: label,
-                    child: Text(label),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedLabel = newValue!;
-                  });
-                },
+                onChanged: _handleTextChange,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Deskripsi tidak boleh kosong' : null,
               ),
               const SizedBox(height: 16),
 
-              // Color Selection
+              // Label
+              DropdownButtonFormField<String>(
+                value: _selectedLabel,
+                dropdownColor: const Color(0xFF1A1A1A),
+                decoration: InputDecoration(
+                  labelText: 'Label',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: const TextStyle(color: Colors.white),
+                items: _labels.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                onChanged: (v) => setState(() => _selectedLabel = v!),
+              ),
+              const SizedBox(height: 16),
+
+              // Warna
               DropdownButtonFormField<String>(
                 value: _selectedColor,
-                decoration: const InputDecoration(
+                dropdownColor: const Color(0xFF1A1A1A),
+                decoration: InputDecoration(
                   labelText: 'Warna',
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
+                style: const TextStyle(color: Colors.white),
                 items: _colors.entries.map((entry) {
                   return DropdownMenuItem<String>(
                     value: entry.key,
@@ -350,101 +271,84 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                         Container(
                           width: 20,
                           height: 20,
-                          color: entry.value,
-                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: entry.value,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(entry.key),
                       ],
                     ),
                   );
                 }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedColor = newValue!;
-                  });
-                },
+                onChanged: (v) => setState(() => _selectedColor = v!),
               ),
               const SizedBox(height: 16),
 
-              // Image Picker Section
+              // Gambar
               Card(
+                color: const Color(0xFF1A1A1A),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Gambar',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.photo_library),
-                            label: const Text('Pilih dari Gallery'),
-                            onPressed: _pickImage,
-                          ),
-                          const SizedBox(width: 16),
-                          if (_imagePath != null)
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Gambar dipilih',
-                                    style: TextStyle(
-                                      color: Colors.green[700],
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    _imagePath!.split('/').last,
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (_imagePath != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              label: const Text('Hapus Gambar',
-                                  style: TextStyle(color: Colors.red)),
-                              onPressed: _removeImage,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Gambar',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                          onPressed: _pickImage,
+                          icon: const Icon(Icons.photo_library, color: Colors.white),
+                          label: const Text('Pilih dari Gallery'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF333333),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                         ),
-                    ],
-                  ),
+                        if (_imagePath != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            _imagePath!.split('/').last,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: _removeImage,
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              label: const Text('Hapus',
+                                  style: TextStyle(color: Colors.red)),
+                            ),
+                          )
+                        ]
+                      ]),
                 ),
               ),
-
               const SizedBox(height: 32),
 
-              // Save Button
+              // Tombol Simpan
               ElevatedButton(
                 onPressed: _saveNote,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF2962FF),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text(
                   isEditing ? 'UPDATE CATATAN' : 'SIMPAN CATATAN',
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
             ],

@@ -36,7 +36,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         updatedAt: DateTime.now(),
         isCompleted: currentNote.isCompleted,
         imagePath: currentNote.imagePath,
-        label: currentNote.label,
+        label: currentNote.label, 
         color: currentNote.color,
       );
 
